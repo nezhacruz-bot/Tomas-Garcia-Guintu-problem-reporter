@@ -1,45 +1,31 @@
-const couchbase = require('couchbase');
+import { getDatabase } from "@netlify/database";
 
-exports.handler = async (event, context) => {
-  // Only allow POST requests (submitting data)
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
+const db = getDatabase();
+
+export const handler = async (event) => {
+  if (event.httpMethod !== "POST") {
+    return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  let cluster;
   try {
-    const body = JSON.parse(event.body);
+    const { category, location, severity, description, role, date, status } =
+      JSON.parse(event.body);
 
-    // Connect to Couchbase Capella using your secure Netlify variables
-    cluster = await couchbase.connect(process.env.COUCHBASE_URL, {
-      username: process.env.COUCHBASE_USER,
-      password: process.env.COUCHBASE_PASSWORD,
-    });
-
-    const bucket = cluster.bucket('school_reports');
-    const collection = bucket.defaultCollection();
-
-    // Create a unique ID for this report entry
-    const reportId = `report_${Date.now()}`;
-    
-    // Save the report data into the bucket
-    await collection.upsert(reportId, {
-      ...body,
-      createdAt: new Date().toISOString()
-    });
+    await db.sql`
+      INSERT INTO reports (category, location, severity, description, role, date, status)
+      VALUES (${category}, ${location}, ${severity}, ${description}, ${role}, ${date}, ${status ?? "new"})
+    `;
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ success: true, message: 'Report saved to cloud database!' })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ success: true, message: "Report saved!" }),
     };
   } catch (error) {
-    console.error('Database error:', error);
+    console.error("Database error:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, error: error.message })
+      body: JSON.stringify({ success: false, error: error.message }),
     };
-  } finally {
-    if (cluster) await cluster.close();
   }
 };

@@ -1,0 +1,8 @@
+{
+  "name": "school-problem-reporter",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@netlify/database": "^1.0.0"
+  }
+}
