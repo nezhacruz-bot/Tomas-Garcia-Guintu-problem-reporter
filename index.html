@@ -340,10 +340,11 @@
 </div>
 
 <script>
-  /* ── ADMIN PASSWORD — change this to whatever you want ── */
+  /* ── ADMIN PASSWORD ── */
   const ADMIN_PASSWORD = 'tgg12345';
 
-  /* ── State ── */
+  /* ── State (Load from LocalStorage) ── */
+  let reports = JSON.parse(localStorage.getItem('school_reports')) || [];
   let selRole = '', selCat = '', selSev = '';
   let filterMode = 'all';
   let adminFilterMode = 'all';
@@ -377,9 +378,12 @@
   }
 
   function updateUrgentCount() {
-    const n = reports.filter(r => r.severity === 'high' && r.status !== 'resolved').length;
-    document.getElementById('urgent-count').textContent = n;
-    document.getElementById('urgent-count').style.display = n ? 'inline' : 'none';
+    const n = reports.filter(r => (r.severity === 'high' || r.severity === 'urgent') && r.status !== 'resolved').length;
+    const countEl = document.getElementById('urgent-count');
+    if (countEl) {
+      countEl.textContent = n;
+      countEl.style.display = n ? 'inline' : 'none';
+    }
   }
 
   /* ── Admin Login ── */
@@ -420,9 +424,8 @@
     showToast('Logged out of admin panel.', 'var(--purple)');
   }
 
- /* ── Form selections ── */
+  /* ── Form selections ── */
   function selectPill(el, type) {
-    // Finds the parent row and un-selects other pills
     const row = el.closest('.pill-row');
     if (row) {
       row.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
@@ -440,24 +443,49 @@
   function selectSev(el, sev) {
     document.querySelectorAll('.sev-btn').forEach(b => { b.className = 'sev-btn'; });
     el.classList.add('sel-' + sev);
-    selSev = sev === 'med' ? 'medium' : sev;
+    
+    // Standardizes severity labels down to high/medium/low values
+    if (sev === 'med' || sev === 'medium') selSev = 'medium';
+    else if (sev === 'urgent' || sev === 'high') selSev = 'high';
+    else selSev = 'low';
   }
 
   /* ── Submit ── */
   function submitReport() {
     const loc  = document.getElementById('f-location').value.trim();
     const desc = document.getElementById('f-desc').value.trim();
+    
     if (!selRole || !selCat || !selSev || !loc) {
       alert('Please select your role, a problem type, a severity level, and enter the location.');
       return;
     }
-    reports.unshift({ id: Date.now(), category: selCat, location: loc, severity: selSev, description: desc, role: selRole, date: new Date().toISOString().slice(0,10), status: 'new' });
+    
+    // Create new report object
+    const newReport = { 
+      id: Date.now(), 
+      category: selCat, 
+      location: loc, 
+      severity: selSev, 
+      description: desc, 
+      role: selRole, 
+      date: new Date().toISOString().slice(0,10), 
+      status: 'new' 
+    };
+    
+    reports.unshift(newReport);
+    
+    // Save to LocalStorage
+    localStorage.setItem('school_reports', JSON.stringify(reports));
+    
+    // Reset form elements
     document.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
     document.querySelectorAll('.cat-tile').forEach(t => t.classList.remove('selected'));
     document.querySelectorAll('.sev-btn').forEach(b => { b.className = 'sev-btn'; });
     document.getElementById('f-location').value = '';
     document.getElementById('f-desc').value = '';
+    
     selRole = ''; selCat = ''; selSev = '';
+    
     showToast('Problem reported — thank you!', 'var(--green)');
     updateUrgentCount();
   }
@@ -478,18 +506,21 @@
     renderReports();
   }
 
-  const sevLabel = { high: '🔴 Urgent', medium: '🟡 Moderate', low: '🟢 Minor' };
+  const sevLabel = { high: '🔴 Urgent', urgent: '🔴 Urgent', medium: '🟡 Moderate', low: '🟢 Minor' };
   const stLabel  = { new: 'New', progress: 'In progress', resolved: 'Resolved' };
 
   function renderReports() {
     let list = [...reports];
-    if (filterMode === 'high')     list = list.filter(r => r.severity === 'high');
+    if (filterMode === 'high')     list = list.filter(r => r.severity === 'high' || r.severity === 'urgent');
     if (filterMode === 'medium')   list = list.filter(r => r.severity === 'medium');
     if (filterMode === 'low')      list = list.filter(r => r.severity === 'low');
     if (filterMode === 'new')      list = list.filter(r => r.status === 'new');
     if (filterMode === 'resolved') list = list.filter(r => r.status === 'resolved');
+    
     const el = document.getElementById('reports-list');
+    if (!el) return;
     if (!list.length) { el.innerHTML = '<div class="empty-state"><i class="ti ti-inbox"></i><p>No reports match this filter.</p></div>'; return; }
+    
     el.innerHTML = list.map(r => `
       <div class="report-item">
         <div class="report-item-top">
@@ -498,7 +529,7 @@
             <div class="report-meta"><i class="ti ti-map-pin"></i> ${r.location} &nbsp;·&nbsp; ${r.role} &nbsp;·&nbsp; ${r.date}</div>
           </div>
           <div class="badges">
-            <span class="badge badge-${r.severity}">${sevLabel[r.severity]}</span>
+            <span class="badge badge-${r.severity}">${sevLabel[r.severity] || 'Minor'}</span>
             <span class="badge badge-${r.status}">${stLabel[r.status]}</span>
           </div>
         </div>
@@ -516,12 +547,19 @@
 
   function setStatus(id, status) {
     const r = reports.find(r => r.id === id);
-    if (r) { r.status = status; renderAdminReports(); updateUrgentCount(); showToast('Status updated to: ' + stLabel[status], status === 'resolved' ? 'var(--green)' : status === 'progress' ? 'var(--amber)' : 'var(--blue)'); }
+    if (r) { 
+      r.status = status; 
+      localStorage.setItem('school_reports', JSON.stringify(reports));
+      renderAdminReports(); 
+      updateUrgentCount(); 
+      showToast('Status updated to: ' + stLabel[status], status === 'resolved' ? 'var(--green)' : status === 'progress' ? 'var(--amber)' : 'var(--blue)'); 
+    }
   }
 
   function deleteReport(id) {
     if (!confirm('Delete this report? This cannot be undone.')) return;
     reports = reports.filter(r => r.id !== id);
+    localStorage.setItem('school_reports', JSON.stringify(reports));
     renderAdminReports();
     updateUrgentCount();
     showToast('Report deleted.', 'var(--red)');
@@ -529,12 +567,15 @@
 
   function renderAdminReports() {
     let list = [...reports];
-    if (adminFilterMode === 'high')     list = list.filter(r => r.severity === 'high');
+    if (adminFilterMode === 'high')     list = list.filter(r => r.severity === 'high' || r.severity === 'urgent');
     if (adminFilterMode === 'new')      list = list.filter(r => r.status === 'new');
     if (adminFilterMode === 'progress') list = list.filter(r => r.status === 'progress');
     if (adminFilterMode === 'resolved') list = list.filter(r => r.status === 'resolved');
+    
     const el = document.getElementById('admin-reports-list');
+    if (!el) return;
     if (!list.length) { el.innerHTML = '<div class="empty-state"><i class="ti ti-inbox"></i><p>No reports here.</p></div>'; return; }
+    
     el.innerHTML = list.map(r => `
       <div class="admin-report-item">
         <div class="admin-report-top">
@@ -543,7 +584,7 @@
             <div class="report-meta"><i class="ti ti-map-pin"></i> ${r.location} &nbsp;·&nbsp; ${r.role} &nbsp;·&nbsp; ${r.date}</div>
           </div>
           <div class="badges">
-            <span class="badge badge-${r.severity}">${sevLabel[r.severity]}</span>
+            <span class="badge badge-${r.severity}">${sevLabel[r.severity] || 'Minor'}</span>
             <span class="badge badge-${r.status}">${stLabel[r.status]}</span>
           </div>
         </div>
@@ -559,27 +600,43 @@
 
   /* ── Stats ── */
   function renderStats() {
-    const total = reports.length, urgent = reports.filter(r => r.severity === 'high').length;
-    const resolved = reports.filter(r => r.status === 'resolved').length, pending = reports.filter(r => r.status === 'new').length;
+    const total = reports.length;
+    if (total === 0) {
+      document.getElementById('stat-grid').innerHTML = '<p style="padding:20px; text-align:center; color:var(--muted)">No data collected yet.</p>';
+      document.getElementById('cat-breakdown').innerHTML = '';
+      document.getElementById('role-breakdown').innerHTML = '';
+      return;
+    }
+    
+    const urgent = reports.filter(r => r.severity === 'high' || r.severity === 'urgent').length;
+    const resolved = reports.filter(r => r.status === 'resolved').length;
+    const pending = reports.filter(r => r.status === 'new').length;
+    
     document.getElementById('stat-grid').innerHTML = `
       <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total</div></div>
       <div class="stat-card"><div class="stat-num" style="color:var(--red)">${urgent}</div><div class="stat-label">Urgent</div></div>
       <div class="stat-card"><div class="stat-num" style="color:var(--green)">${resolved}</div><div class="stat-label">Resolved</div></div>
       <div class="stat-card"><div class="stat-num" style="color:var(--blue)">${pending}</div><div class="stat-label">New</div></div>`;
+      
     function breakdown(key, cid) {
-      const counts = {}; reports.forEach(r => { counts[r[key]] = (counts[r[key]]||0)+1; });
+      const counts = {}; 
+      reports.forEach(r => { counts[r[key]] = (counts[r[key]]||0)+1; });
       const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
-      document.getElementById(cid).innerHTML = sorted.map(([n,c]) => `
-        <div class="breakdown-row">
-          <span class="breakdown-name">${n}</span>
-          <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${Math.round((c/total)*100)}%"></div></div>
-          <span class="breakdown-count">${c}</span>
-        </div>`).join('');
+      const container = document.getElementById(cid);
+      if (container) {
+        container.innerHTML = sorted.map(([n,c]) => `
+          <div class="breakdown-row">
+            <span class="breakdown-name">${n}</span>
+            <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${Math.round((c/total)*100)}%"></div></div>
+            <span class="breakdown-count">${c}</span>
+          </div>`).join('');
+      }
     }
     breakdown('category','cat-breakdown');
     breakdown('role','role-breakdown');
   }
 
+  // Initial code triggers on load
   updateUrgentCount();
 </script>
 </body>
