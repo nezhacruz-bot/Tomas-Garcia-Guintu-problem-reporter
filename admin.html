@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tomas Garcia Guintu SHS Problem Reporter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
+<style>
+  :root {
+    --blue:   #1A6FD4;
+    --blue-l: #EBF3FD;
+    --blue-m: #C0D9F8;
+    --blue-d: #0D4A9C;
+    --red:    #D63B3B;
+    --red-l:  #FDECEC;
+    --amber:  #C47F0D;
+    --amber-l:#FDF3DC;
+    --green:  #1E8A55;
+    --green-l:#E6F5EE;
+    --purple:   #6B3FBF;
+    --purple-l: #F0EBFB;
+    --purple-d: #4A2A8A;
+    --gray-0: #FFFFFF;
+    --gray-1: #F7F8FA;
+    --gray-2: #EDEEF1;
+    --gray-3: #D8DAE0;
+    --gray-4: #9EA3AE;
+    --gray-5: #5C6070;
+    --gray-6: #1C1E26;
+    --font-head: 'DM Sans', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.05);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); font-size: 15px; color: var(--gray-6); background: var(--gray-1); min-height: 100vh; }
+
+  /* NAV */
+  nav { background: var(--gray-0); border-bottom: 1px solid var(--gray-2); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
+  .nav-logo { display: flex; align-items: center; gap: 10px; font-family: var(--font-head); font-weight: 700; font-size: 17px; color: var(--gray-6); text-decoration: none; cursor: pointer; }
+  .nav-logo-icon { width: 34px; height: 34px; background: var(--blue); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border: none; background: transparent; border-radius: var(--radius); font-family: var(--font-body); font-size: 14px; font-weight: 500; color: var(--gray-5); cursor: pointer; transition: background 0.15s, color 0.15s; }
+  .nav-tab:hover { background: var(--gray-1); color: var(--gray-6); }
+  .nav-tab.active { background: var(--blue-l); color: var(--blue-d); }
+  .nav-tab.admin-tab.active { background: var(--purple-l); color: var(--purple-d); }
+  .nav-tab i { font-size: 16px; }
+  .nav-count { background: var(--red-l); color: var(--red); font-size: 11px; font-weight: 600; border-radius: 10px; padding: 1px 7px; min-width: 20px; text-align: center; }
+  #admin-nav-tab { display: none; }
+
+  /* LAYOUT */
+  .page { display: none; }
+  .page.active { display: block; }
+  .container { max-width: 780px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* HERO */
+  .hero { background: var(--blue); color: #fff; padding: 2.5rem 1.5rem 2rem; text-align: center; }
+  .hero-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .75; margin-bottom: 8px; }
+  .hero h1 { font-family: var(--font-head); font-size: clamp(24px, 5vw, 36px); font-weight: 700; line-height: 1.2; margin-bottom: 10px; }
+  .hero p { font-size: 15px; opacity: .85; max-width: 480px; margin: 0 auto; line-height: 1.6; }
+  .hero.admin-hero { background: linear-gradient(135deg, var(--purple-d), var(--purple)); }
+
+  /* CARDS */
+  .card { background: var(--gray-0); border: 1px solid var(--gray-2); border-radius: 14px; padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: var(--shadow); }
+  .card-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--gray-6); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+  .card-title i { font-size: 18px; color: var(--blue); }
+  .card-title i.admin-icon { color: var(--purple); }
+
+  /* FORM */
+  .field { margin-bottom: 1.1rem; }
+  .field label { display: block; font-size: 13px; font-weight: 500; color: var(--gray-5); margin-bottom: 6px; }
+  .field input, .field select, .field textarea { width: 100%; font-family: var(--font-body); font-size: 15px; color: var(--gray-6); background: var(--gray-0); border: 1.5px solid var(--gray-3); border-radius: var(--radius); padding: 10px 13px; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-m); }
+  .field textarea { min-height: 95px; resize: vertical; }
+  .pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill { padding: 7px 16px; border: 1.5px solid var(--gray-3); border-radius: 30px; background: var(--gray-0); cursor: pointer; font-size: 13px; font-weight: 500; color: var(--gray-5); transition: all 0.15s; }
+  .pill:hover { border-color: var(--blue-m); color: var(--blue-d); }
+  .pill.selected { background: var(--blue-l); color: var(--blue-d); border-color: var(--blue); }
+  .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+  .cat-tile { border: 1.5px solid var(--gray-3); border-radius: var(--radius); background: var(--gray-0); cursor: pointer; padding: 12px 8px 10px; text-align: center; font-size: 12px; font-weight: 500; color: var(--gray-5); transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 7px; }
+  .cat-tile i { font-size: 24px; }
+  .cat-tile:hover { border-color: var(--blue-m); color: var(--blue-d); background: var(--blue-l); }
+  .cat-tile.selected { border-color: var(--blue); background: var(--blue-l); color: var(--blue-d); }
+  .sev-row { display: flex; gap: 8px; }
+  .sev-btn { flex: 1; padding: 10px; border: 1.5px solid var(--gray-3); border-radius: var(--radius); background: var(--gray-0); cursor: pointer; font-size: 13px; font-weight: 500; color: var(--gray-5); text-align: center; transition: all 0.15s; }
+  .sev-btn:hover { border-color: var(--gray-4); color: var(--gray-6); }
+  .sev-btn.sel-low  { background: var(--green-l); color: var(--green); border-color: var(--green); }
+  .sev-btn.sel-med  { background: var(--amber-l); color: var(--amber); border-color: var(--amber); }
+  .sev-btn.sel-high { background: var(--red-l);   color: var(--red);   border-color: var(--red); }
+  .btn-primary { display: block; width: 100%; padding: 13px; background: var(--blue); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-body); font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.15s, transform 0.1s; margin-top: .5rem; }
+  .btn-primary:hover { background: var(--blue-d); }
+  .btn-primary:active { transform: scale(0.98); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--green); color: #fff; padding: 12px 20px; border-radius: 30px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.18); transition: transform 0.3s ease; z-index: 999; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* REPORTS PAGE */
+  .reports-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .reports-bar h2 { font-family: var(--font-head); font-size: 20px; font-weight: 700; }
+  .filter-wrap { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-chip { padding: 6px 13px; border: 1.5px solid var(--gray-3); border-radius: 30px; background: var(--gray-0); cursor: pointer; font-size: 13px; font-weight: 500; color: var(--gray-5); transition: all 0.15s; }
+  .filter-chip:hover { border-color: var(--blue-m); color: var(--blue-d); }
+  .filter-chip.active { background: var(--blue-l); color: var(--blue-d); border-color: var(--blue); }
+  .report-item { background: var(--gray-0); border: 1px solid var(--gray-2); border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 10px; box-shadow: var(--shadow); transition: border-color 0.15s; }
+  .report-item:hover { border-color: var(--blue-m); }
+  .report-item-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .report-cat { font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--gray-6); }
+  .report-meta { font-size: 13px; color: var(--gray-4); margin-top: 4px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .report-meta i { font-size: 13px; }
+  .report-desc { font-size: 14px; color: var(--gray-5); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-2); line-height: 1.6; }
+  .badges { display: flex; gap: 6px; flex-wrap: wrap; flex-shrink: 0; }
+  .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 10px; }
+  .badge-high     { background: var(--red-l);    color: var(--red); }
+  .badge-medium   { background: var(--amber-l);  color: var(--amber); }
+  .badge-low      { background: var(--green-l);  color: var(--green); }
+  .badge-new      { background: var(--blue-l);   color: var(--blue-d); }
+  .badge-progress { background: var(--amber-l);  color: var(--amber); }
+  .badge-resolved { background: var(--green-l);  color: var(--green); }
+  .empty-state { text-align: center; padding: 4rem 1rem; color: var(--gray-4); }
+  .empty-state i { font-size: 40px; display: block; margin-bottom: 10px; }
+  .empty-state p { font-size: 14px; }
+
+  /* STATS PAGE */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 1.25rem; }
+  .stat-card { background: var(--gray-0); border: 1px solid var(--gray-2); border-radius: 14px; padding: 1.25rem 1rem; text-align: center; box-shadow: var(--shadow); }
+  .stat-num { font-family: var(--font-head); font-size: 32px; font-weight: 700; line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--gray-4); margin-top: 5px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
+  .breakdown-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--gray-2); }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-name { font-size: 14px; flex: 1; }
+  .breakdown-bar-wrap { width: 120px; height: 6px; background: var(--gray-2); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+  .breakdown-bar { height: 100%; background: var(--blue); border-radius: 3px; }
+  .breakdown-count { font-size: 13px; font-weight: 600; color: var(--gray-6); min-width: 18px; text-align: right; }
+
+  /* ADMIN LOGIN OVERLAY */
+  .admin-overlay { position: fixed; inset: 0; background: rgba(10,10,20,0.55); display: flex; align-items: center; justify-content: center; z-index: 500; backdrop-filter: blur(4px); }
+  .admin-overlay.hidden { display: none; }
+  .admin-login-box { background: var(--gray-0); border-radius: 18px; padding: 2.5rem 2rem; width: 100%; max-width: 380px; box-shadow: 0 8px 40px rgba(0,0,0,.18); text-align: center; }
+  .admin-login-box .lock-icon { width: 56px; height: 56px; background: var(--purple-l); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 26px; color: var(--purple); }
+  .admin-login-box h2 { font-family: var(--font-head); font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .admin-login-box p { font-size: 13px; color: var(--gray-4); margin-bottom: 1.5rem; }
+  .admin-login-box input { width: 100%; font-family: var(--font-body); font-size: 16px; text-align: center; letter-spacing: .2em; padding: 12px; border: 1.5px solid var(--gray-3); border-radius: var(--radius); outline: none; margin-bottom: 1rem; transition: border-color 0.15s, box-shadow 0.15s; }
+  .admin-login-box input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-l); }
+  .admin-login-box input.error { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-l); }
+  .btn-admin { display: block; width: 100%; padding: 12px; background: var(--purple); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-body); font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .btn-admin:hover { background: var(--purple-d); }
+  .error-msg { font-size: 13px; color: var(--red); margin-top: 8px; min-height: 18px; }
+  .btn-cancel { background: none; border: none; color: var(--gray-4); font-size: 13px; cursor: pointer; margin-top: 14px; display: block; width: 100%; }
+  .btn-cancel:hover { color: var(--gray-6); }
+
+  /* ADMIN PAGE */
+  .admin-bar { background: var(--purple-d); color: #fff; padding: 8px 2rem; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+  .admin-bar i { font-size: 15px; }
+  .admin-bar .logout-btn { margin-left: auto; background: rgba(255,255,255,.15); border: none; color: #fff; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; cursor: pointer; }
+  .admin-bar .logout-btn:hover { background: rgba(255,255,255,.25); }
+  .admin-report-item { background: var(--gray-0); border: 1px solid var(--gray-2); border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 10px; box-shadow: var(--shadow); }
+  .admin-report-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+  .admin-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gray-2); }
+  .action-btn { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid; transition: all 0.12s; display: flex; align-items: center; gap: 5px; }
+  .action-btn i { font-size: 13px; }
+  .btn-set-new      { border-color: var(--blue-m);  color: var(--blue-d); background: var(--blue-l); }
+  .btn-set-new:hover { background: var(--blue-m); }
+  .btn-set-progress { border-color: #f0d080; color: #7a5200; background: var(--amber-l); }
+  .btn-set-progress:hover { background: #f5e0a0; }
+  .btn-set-resolved { border-color: #8ee0b0; color: #0a5c30; background: var(--green-l); }
+  .btn-set-resolved:hover { background: #b0eecc; }
+  .btn-delete       { border-color: var(--red-l); color: var(--red); background: var(--red-l); margin-left: auto; }
+  .btn-delete:hover { background: #f9c8c8; }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    nav { padding: 0 1rem; }
+    .nav-tab span { display: none; }
+    .sev-row { flex-direction: column; }
+    .hero { padding: 1.75rem 1rem 1.5rem; }
+    .container { padding: 1.25rem 1rem; }
+    .admin-bar { padding: 8px 1rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- ADMIN LOGIN OVERLAY -->
+<div class="admin-overlay hidden" id="admin-overlay">
+  <div class="admin-login-box">
+    <div class="lock-icon"><i class="ti ti-lock" aria-hidden="true"></i></div>
+    <h2>Admin access</h2>
+    <p>Enter the admin password to continue.</p>
+    <input type="password" id="admin-pw-input" placeholder="Password" onkeydown="if(event.key==='Enter')checkAdminPw()" autocomplete="off" />
+    <button class="btn-admin" onclick="checkAdminPw()">Unlock</button>
+    <div class="error-msg" id="pw-error"></div>
+    <button class="btn-cancel" onclick="closeAdminOverlay()">Cancel</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="showPage('report')">
+    <div class="nav-logo-icon"><i class="ti ti-school" aria-label="School icon"></i></div>
+    <span>School Reporter</span>
+  </div>
+  <div class="nav-tabs" role="tablist">
+    <button class="nav-tab active" role="tab" onclick="showPage('report')">
+      <i class="ti ti-plus" aria-hidden="true"></i><span>Report a problem</span>
+    </button>
+    <button class="nav-tab" role="tab" onclick="showPage('reports')">
+      <i class="ti ti-list" aria-hidden="true"></i><span>All reports</span>
+      <span class="nav-count" id="urgent-count">0</span>
+    </button>
+    <button class="nav-tab" role="tab" onclick="showPage('stats')">
+      <i class="ti ti-chart-bar" aria-hidden="true"></i><span>Overview</span>
+    </button>
+    <button class="nav-tab admin-tab" role="tab" id="admin-nav-tab" onclick="showPage('admin')">
+      <i class="ti ti-shield-lock" aria-hidden="true"></i><span>Admin</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══ REPORT PAGE ══ -->
+<div id="page-report" class="page active">
+  <div class="hero">
+    <p class="hero-eyebrow">School Facility Report System</p>
+    <h1>Report a school problem</h1>
+    <p>Students, parents, teachers, and staff can log facility issues so they get fixed faster.</p>
+  </div>
+  <div class="container" style="max-width:620px;">
+    <div class="card">
+      <div class="card-title"><i class="ti ti-user-circle" aria-hidden="true"></i> Your role</div>
+      <div class="pill-row" id="role-row">
+        <button class="pill" onclick="selectPill(this,'role')">Student</button>
+        <button class="pill" onclick="selectPill(this,'role')">Parent</button>
+        <button class="pill" onclick="selectPill(this,'role')">Teacher</button>
+        <button class="pill" onclick="selectPill(this,'role')">School staff</button>
+        <button class="pill" onclick="selectPill(this,'role')">Inspector</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-category" aria-hidden="true"></i> Problem type</div>
+      <div class="cat-grid" id="cat-grid">
+        <button class="cat-tile" onclick="selectCat(this)"><i class="ti ti-droplet" aria-hidden="true"></i>Sewage / Drainage</button>
+        <button class="cat-tile" onclick="selectCat(this)"><i class="ti ti-armchair" aria-hidden="true"></i>Broken furniture</button>
+        <button class="cat-tile" onclick="selectCat(this)"><i class="ti ti-building" aria-hidden="true"></i>Roof / Ceiling leak</button>
+        <button class="cat-tile" onclick="selectCat(this)"><i class="ti ti-bolt" aria-hidden="true"></i>Electrical issue</button>
+        <button class="cat-tile" onclick="selectCat(this)"><i class="ti ti-trash" aria-hidden="true"></i>Dirty / Unsanitary</button>
+        <button class="cat-tile" onclick="selectCat(this)"><i class="ti ti-window" aria-hidden="true"></i>Broken windows</button>
+        <button class="cat-tile" onclick="selectCat(this)"><i class="ti ti-droplet-off" aria-hidden="true"></i>No water supply</button>
+        <button class="cat-tile" onclick="selectCat(this)"><i class="ti ti-alert-triangle" aria-hidden="true"></i>Safety hazard</button>
+        <button class="cat-tile" onclick="selectCat(this)"><i class="ti ti-dots" aria-hidden="true"></i>Other</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-map-pin" aria-hidden="true"></i> Location &amp; details</div>
+      <div class="field">
+        <label for="f-location">Location in school</label>
+        <input id="f-location" type="text" placeholder="e.g. Classroom 3B, Girls' comfort room, Canteen" />
+      </div>
+      <div class="field">
+        <label>Severity</label>
+        <div class="sev-row">
+          <button class="sev-btn" onclick="selectSev(this,'low')">🟢 Minor</button>
+          <button class="sev-btn" onclick="selectSev(this,'med')">🟡 Moderate</button>
+          <button class="sev-btn" onclick="selectSev(this,'high')">🔴 Urgent</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-desc">Description</label>
+        <textarea id="f-desc" placeholder="Describe the problem in detail — what you saw, how long it's been there, etc."></textarea>
+      </div>
+      <button class="btn-primary" onclick="submitReport()">
+        <i class="ti ti-send" aria-hidden="true"></i> Submit report
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ALL REPORTS PAGE ══ -->
+<div id="page-reports" class="page">
+  <div class="container">
+    <div class="reports-bar">
+      <h2>All reports</h2>
+      <div class="filter-wrap" id="filter-row">
+        <button class="filter-chip active" onclick="setFilter(this,'all')">All</button>
+        <button class="filter-chip" onclick="setFilter(this,'high')">🔴 Urgent</button>
+        <button class="filter-chip" onclick="setFilter(this,'medium')">🟡 Moderate</button>
+        <button class="filter-chip" onclick="setFilter(this,'low')">🟢 Minor</button>
+        <button class="filter-chip" onclick="setFilter(this,'new')">New</button>
+        <button class="filter-chip" onclick="setFilter(this,'resolved')">Resolved</button>
+      </div>
+    </div>
+    <div id="reports-list"></div>
+  </div>
+</div>
+
+<!-- ══ STATS PAGE ══ -->
+<div id="page-stats" class="page">
+  <div class="container">
+    <div class="stat-grid" id="stat-grid"></div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-chart-bar" aria-hidden="true"></i> Reports by category</div>
+      <div id="cat-breakdown"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-users" aria-hidden="true"></i> Reports by role</div>
+      <div id="role-breakdown"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN PAGE ══ -->
+<div id="page-admin" class="page">
+  <div class="admin-bar">
+    <i class="ti ti-shield-check" aria-hidden="true"></i>
+    Admin panel — manage all reports
+    <button class="logout-btn" onclick="adminLogout()">Log out</button>
+  </div>
+  <div class="container">
+    <div class="reports-bar">
+      <h2 style="color:var(--purple-d);">Manage reports</h2>
+      <div class="filter-wrap" id="admin-filter-row">
+        <button class="filter-chip active" onclick="setAdminFilter(this,'all')">All</button>
+        <button class="filter-chip" onclick="setAdminFilter(this,'high')">🔴 Urgent</button>
+        <button class="filter-chip" onclick="setAdminFilter(this,'new')">New</button>
+        <button class="filter-chip" onclick="setAdminFilter(this,'progress')">In progress</button>
+        <button class="filter-chip" onclick="setAdminFilter(this,'resolved')">Resolved</button>
+      </div>
+    </div>
+    <div id="admin-reports-list"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <i class="ti ti-circle-check" aria-hidden="true"></i>
+  <span id="toast-msg">Problem reported — thank you!</span>
+</div>
+<script>
+  /* ── ADMIN PASSWORD ── */
+  const ADMIN_PASSWORD = 'tgg12345';
+
+  /* ── State (Load from LocalStorage) ── */
+  let reports = JSON.parse(localStorage.getItem('school_reports')) || [];
+  let selRole = '', selCat = '', selSev = '';
+  let filterMode = 'all';
+  let adminFilterMode = 'all';
+  let isAdminLoggedIn = false;
+
+  /* Secret: click the logo 5 times quickly to open admin login */
+  let logoClickCount = 0, logoClickTimer = null;
+  document.querySelector('.nav-logo').addEventListener('click', () => {
+    logoClickCount++;
+    clearTimeout(logoClickTimer);
+    logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 1500);
+    if (logoClickCount >= 5) {
+      logoClickCount = 0;
+      openAdminOverlay();
+    }
+  });
+
+  /* ── Navigation ── */
+  function showPage(name) {
+    if (name === 'admin' && !isAdminLoggedIn) { openAdminOverlay(); return; }
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    const tabs = document.querySelectorAll('.nav-tab');
+    const idx = { report: 0, reports: 1, stats: 2, admin: 3 }[name];
+    if (tabs[idx]) tabs[idx].classList.add('active');
+    if (name === 'reports') renderReports();
+    if (name === 'stats')   renderStats();
+    if (name === 'admin')   renderAdminReports();
+    updateUrgentCount();
+  }
+
+  function updateUrgentCount() {
+    const n = reports.filter(r => (r.severity === 'high' || r.severity === 'urgent') && r.status !== 'resolved').length;
+    const countEl = document.getElementById('urgent-count');
+    if (countEl) {
+      countEl.textContent = n;
+      countEl.style.display = n ? 'inline' : 'none';
+    }
+  }
+
+  /* ── Admin Login ── */
+  function openAdminOverlay() {
+    document.getElementById('admin-overlay').classList.remove('hidden');
+    document.getElementById('admin-pw-input').value = '';
+    document.getElementById('pw-error').textContent = '';
+    document.getElementById('admin-pw-input').classList.remove('error');
+    setTimeout(() => document.getElementById('admin-pw-input').focus(), 100);
+  }
+
+  function closeAdminOverlay() {
+    document.getElementById('admin-overlay').classList.add('hidden');
+  }
+
+  function checkAdminPw() {
+    const val = document.getElementById('admin-pw-input').value;
+    if (val === ADMIN_PASSWORD) {
+      isAdminLoggedIn = true;
+      closeAdminOverlay();
+      document.getElementById('admin-nav-tab').style.display = 'flex';
+      showPage('admin');
+    } else {
+      document.getElementById('admin-pw-input').classList.add('error');
+      document.getElementById('pw-error').textContent = 'Incorrect password. Try again.';
+      document.getElementById('admin-pw-input').value = '';
+      setTimeout(() => {
+        document.getElementById('admin-pw-input').classList.remove('error');
+        document.getElementById('pw-error').textContent = '';
+      }, 2500);
+    }
+  }
+
+  function adminLogout() {
+    isAdminLoggedIn = false;
+    document.getElementById('admin-nav-tab').style.display = 'none';
+    showPage('report');
+    showToast('Logged out of admin panel.', 'var(--purple)');
+  }
+
+  /* ── Form selections ── */
+  function selectPill(el, type) {
+    const row = el.closest('.pill-row');
+    if (row) {
+      row.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+    }
+    el.classList.add('selected');
+    selRole = el.textContent.trim();
+  }
+
+  function selectCat(el) {
+    document.querySelectorAll('.cat-tile').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    selCat = el.textContent.trim();
+  }
+
+  function selectSev(el, sev) {
+    document.querySelectorAll('.sev-btn').forEach(b => { b.className = 'sev-btn'; });
+    el.classList.add('sel-' + sev);
+    
+    // Standardizes severity labels down to high/medium/low values
+    if (sev === 'med' || sev === 'medium') selSev = 'medium';
+    else if (sev === 'urgent' || sev === 'high') selSev = 'high';
+    else selSev = 'low';
+  }
+
+  /* ── Submit ── */
+  function submitReport() {
+    const loc  = document.getElementById('f-location').value.trim();
+    const desc = document.getElementById('f-desc').value.trim();
+    
+    if (!selRole || !selCat || !selSev || !loc) {
+      alert('Please select your role, a problem type, a severity level, and enter the location.');
+      return;
+    }
+    
+    // Create new report object
+    const newReport = { 
+      id: Date.now(), 
+      category: selCat, 
+      location: loc, 
+      severity: selSev, 
+      description: desc, 
+      role: selRole, 
+      date: new Date().toISOString().slice(0,10), 
+      status: 'new' 
+    };
+    
+    reports.unshift(newReport);
+    
+    // Save to LocalStorage
+    localStorage.setItem('school_reports', JSON.stringify(reports));
+    
+    // Reset form elements
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+    document.querySelectorAll('.cat-tile').forEach(t => t.classList.remove('selected'));
+    document.querySelectorAll('.sev-btn').forEach(b => { b.className = 'sev-btn'; });
+    document.getElementById('f-location').value = '';
+    document.getElementById('f-desc').value = '';
+    
+    selRole = ''; selCat = ''; selSev = '';
+    
+    showToast('Problem reported — thank you!', 'var(--green)');
+    updateUrgentCount();
+  }
+
+  function showToast(msg, color) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg || 'Done!';
+    t.style.background = color || 'var(--green)';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  /* ── Public reports list ── */
+  function setFilter(el, mode) {
+    document.querySelectorAll('#filter-row .filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    filterMode = mode;
+    renderReports();
+  }
+
+  const sevLabel = { high: '🔴 Urgent', urgent: '🔴 Urgent', medium: '🟡 Moderate', low: '🟢 Minor' };
+  const stLabel  = { new: 'New', progress: 'In progress', resolved: 'Resolved' };
+
+  function renderReports() {
+    let list = [...reports];
+    if (filterMode === 'high')     list = list.filter(r => r.severity === 'high' || r.severity === 'urgent');
+    if (filterMode === 'medium')   list = list.filter(r => r.severity === 'medium');
+    if (filterMode === 'low')      list = list.filter(r => r.severity === 'low');
+    if (filterMode === 'new')      list = list.filter(r => r.status === 'new');
+    if (filterMode === 'resolved') list = list.filter(r => r.status === 'resolved');
+    
+    const el = document.getElementById('reports-list');
+    if (!el) return;
+    if (!list.length) { el.innerHTML = '<div class="empty-state"><i class="ti ti-inbox"></i><p>No reports match this filter.</p></div>'; return; }
+    
+    el.innerHTML = list.map(r => `
+      <div class="report-item">
+        <div class="report-item-top">
+          <div>
+            <div class="report-cat">${r.category}</div>
+            <div class="report-meta"><i class="ti ti-map-pin"></i> ${r.location} &nbsp;·&nbsp; ${r.role} &nbsp;·&nbsp; ${r.date}</div>
+          </div>
+          <div class="badges">
+            <span class="badge badge-${r.severity}">${sevLabel[r.severity] || 'Minor'}</span>
+            <span class="badge badge-${r.status}">${stLabel[r.status]}</span>
+          </div>
+        </div>
+        ${r.description ? `<div class="report-desc">${r.description}</div>` : ''}
+      </div>`).join('');
+  }
+
+  /* ── Admin reports list ── */
+  function setAdminFilter(el, mode) {
+    document.querySelectorAll('#admin-filter-row .filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    adminFilterMode = mode;
+    renderAdminReports();
+  }
+
+  function setStatus(id, status) {
+    const r = reports.find(r => r.id === id);
+    if (r) { 
+      r.status = status; 
+      localStorage.setItem('school_reports', JSON.stringify(reports));
+      renderAdminReports(); 
+      updateUrgentCount(); 
+      showToast('Status updated to: ' + stLabel[status], status === 'resolved' ? 'var(--green)' : status === 'progress' ? 'var(--amber)' : 'var(--blue)'); 
+    }
+  }
+
+  function deleteReport(id) {
+    if (!confirm('Delete this report? This cannot be undone.')) return;
+    reports = reports.filter(r => r.id !== id);
+    localStorage.setItem('school_reports', JSON.stringify(reports));
+    renderAdminReports();
+    updateUrgentCount();
+    showToast('Report deleted.', 'var(--red)');
+  }
+
+  function renderAdminReports() {
+    let list = [...reports];
+    if (adminFilterMode === 'high')     list = list.filter(r => r.severity === 'high' || r.severity === 'urgent');
+    if (adminFilterMode === 'new')      list = list.filter(r => r.status === 'new');
+    if (adminFilterMode === 'progress') list = list.filter(r => r.status === 'progress');
+    if (adminFilterMode === 'resolved') list = list.filter(r => r.status === 'resolved');
+    
+    const el = document.getElementById('admin-reports-list');
+    if (!el) return;
+    if (!list.length) { el.innerHTML = '<div class="empty-state"><i class="ti ti-inbox"></i><p>No reports here.</p></div>'; return; }
+    
+    el.innerHTML = list.map(r => `
+      <div class="admin-report-item">
+        <div class="admin-report-top">
+          <div>
+            <div class="report-cat">${r.category}</div>
+            <div class="report-meta"><i class="ti ti-map-pin"></i> ${r.location} &nbsp;·&nbsp; ${r.role} &nbsp;·&nbsp; ${r.date}</div>
+          </div>
+          <div class="badges">
+            <span class="badge badge-${r.severity}">${sevLabel[r.severity] || 'Minor'}</span>
+            <span class="badge badge-${r.status}">${stLabel[r.status]}</span>
+          </div>
+        </div>
+        ${r.description ? `<div class="report-desc">${r.description}</div>` : ''}
+        <div class="admin-actions">
+          <button class="action-btn btn-set-new"      onclick="setStatus(${r.id},'new')"><i class="ti ti-circle"></i> New</button>
+          <button class="action-btn btn-set-progress" onclick="setStatus(${r.id},'progress')"><i class="ti ti-clock"></i> In progress</button>
+          <button class="action-btn btn-set-resolved" onclick="setStatus(${r.id},'resolved')"><i class="ti ti-circle-check"></i> Resolved</button>
+          <button class="action-btn btn-delete"       onclick="deleteReport(${r.id})"><i class="ti ti-trash"></i> Delete</button>
+        </div>
+      </div>`).join('');
+  }
+
+  /* ── Stats ── */
+  function renderStats() {
+    const total = reports.length;
+    if (total === 0) {
+      document.getElementById('stat-grid').innerHTML = '<p style="padding:20px; text-align:center; color:var(--muted)">No data collected yet.</p>';
+      document.getElementById('cat-breakdown').innerHTML = '';
+      document.getElementById('role-breakdown').innerHTML = '';
+      return;
+    }
+    
+    const urgent = reports.filter(r => r.severity === 'high' || r.severity === 'urgent').length;
+    const resolved = reports.filter(r => r.status === 'resolved').length;
+    const pending = reports.filter(r => r.status === 'new').length;
+    
+    document.getElementById('stat-grid').innerHTML = `
+      <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--red)">${urgent}</div><div class="stat-label">Urgent</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--green)">${resolved}</div><div class="stat-label">Resolved</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--blue)">${pending}</div><div class="stat-label">New</div></div>`;
+      
+    function breakdown(key, cid) {
+      const counts = {}; 
+      reports.forEach(r => { counts[r[key]] = (counts[r[key]]||0)+1; });
+      const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+      const container = document.getElementById(cid);
+      if (container) {
+        container.innerHTML = sorted.map(([n,c]) => `
+          <div class="breakdown-row">
+            <span class="breakdown-name">${n}</span>
+            <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${Math.round((c/total)*100)}%"></div></div>
+            <span class="breakdown-count">${c}</span>
+          </div>`).join('');
+      }
+    }
+    breakdown('category','cat-breakdown');
+    breakdown('role','role-breakdown');
+  }
+
+  // Initial code triggers on load
+  updateUrgentCount();
+</script>
+</body>
+</html>
