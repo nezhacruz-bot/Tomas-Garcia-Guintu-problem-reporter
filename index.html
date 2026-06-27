@@ -420,9 +420,13 @@
     showToast('Logged out of admin panel.', 'var(--purple)');
   }
 
-  /* ── Form selections ── */
-  function selectPill(el) {
-    el.closest('.pill-row').querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+ /* ── Form selections ── */
+  function selectPill(el, type) {
+    // Finds the parent row and un-selects other pills
+    const row = el.closest('.pill-row');
+    if (row) {
+      row.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+    }
     el.classList.add('selected');
     selRole = el.textContent.trim();
   }
