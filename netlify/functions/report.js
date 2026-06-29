@@ -1,59 +1,52 @@
-import couchbase from "couchbase";
-
-// 1. Initialize the Couchbase connection using your environment variables
-let cluster = null;
-
-async function getCouchbaseBucket() {
-  if (!cluster) {
-    // These environment variables must match your Capella Connection String, Username, and Password
-    const connectionString = process.env.COUCHBASE_URL || "couchbases://cb.<your-cluster-id>.cloud.couchbase.com";
-    const username = process.env.COUCHBASE_USERNAME;
-    const password = process.env.COUCHBASE_PASSWORD;
-
-    cluster = await couchbase.connect(connectionString, {
-      username: username,
-      password: password,
-      // Capella requires TLS, configuration defaults usually handle this but you can specify custom settings if needed
-    });
-  }
-  
-  // Connect to your specific bucket
-  const bucket = cluster.bucket("school_reports");
-  const scope = bucket.scope("_default");
-  const collection = scope.collection("_default");
-  
-  return collection;
-}
+import { getDatabase } from "@netlify/database";
 
 export const handler = async (event) => {
+  // 1. Connection & Method Verification
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
   try {
-    const reportData = JSON.parse(event.body);
-    
-    // Fallback default status if not provided
-    if (!reportData.status) {
-      reportData.status = "new";
+    const db = getDatabase();
+
+    // 2. Full Verification of Incoming Data Lifecycle
+    const { id, category, location, severity, description, role, date, status } = JSON.parse(event.body);
+
+    if (!category || !location || !severity || !role) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ success: false, error: "Missing required fields." }),
+      };
     }
 
-    // Generate a unique document ID using the timestamp
-    const docId = `report::${reportData.id || Date.now()}`;
+    // 3. Connection lifecycle management: Ensure Schema is ready
+    await db.sql`
+      CREATE TABLE IF NOT EXISTS reports (
+        id BIGINT PRIMARY KEY,
+        category TEXT,
+        location TEXT,
+        severity TEXT,
+        description TEXT,
+        role TEXT,
+        date TEXT,
+        status TEXT
+      );
+    `;
 
-    // 2. Get our Couchbase collection reference
-    const collection = await getCouchbaseBucket();
-
-    // 3. Insert the document directly into your Couchbase bucket
-    await collection.insert(docId, reportData);
+    // 4. Executing secure parameterized query via Netlify Database primitives
+    await db.sql`
+      INSERT INTO reports (id, category, location, severity, description, role, date, status)
+      VALUES (${id || Date.now()}, ${category}, ${location}, ${severity}, ${description}, ${role}, ${date}, ${status ?? "new"})
+      ON CONFLICT (id) DO NOTHING;
+    `;
 
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ success: true, message: "Report saved to Couchbase!", id: docId }),
+      body: JSON.stringify({ success: true, message: "Report successfully saved to Netlify Database Postgres!" }),
     };
   } catch (error) {
-    console.error("Couchbase Database error:", error);
+    console.error("Netlify Database Execution Error:", error);
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
