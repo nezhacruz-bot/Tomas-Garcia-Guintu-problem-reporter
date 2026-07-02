@@ -1,0 +1,80 @@
+#include <Arduino.h>
+#if __has_include(<WiFi.h>)
+#include <WiFi.h>
+#else
+class WiFiClass {
+public:
+  static int status() { return 0; }
+  static void begin(const char*, const char*) {}
+};
+static WiFiClass WiFi;
+#endif
+
+#if __has_include(<HTTPClient.h>)
+#include <HTTPClient.h>
+#else
+class HTTPClient {
+public:
+  HTTPClient() = default;
+  void begin(const String&) {}
+  int GET() { return 0; }
+  void end() {}
+};
+#endif
+
+// --- Configuration ---
+const char* ssid     = "NETFACTORY762";
+const char* password = "Nezha123456";
+const char* serverName = "http://api.thingspeak.com/update";
+String apiKey = "A3UVLH2DTIZ0GRYF"; // Get from ThingSpeak
+
+// --- Pins ---
+const int TRIG_PIN = 12;
+const int ECHO_PIN = 14;
+
+// --- Calibration ---
+const float TOTAL_PIPE_LENGTH = 150.0; // Total height from sensor to bottom in cm
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+
+  // Connect to Wi-Fi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi Connected!");
+}
+
+void loop() {
+  // 1. Get distance measurement
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  long duration = pulseIn(ECHO_PIN, HIGH);
+  float distanceToWater = duration * 0.0343 / 2; // Distance in cm
+
+  // 2. Calculate actual water level height
+  float waterLevel = TOTAL_PIPE_LENGTH - distanceToWater;
+  if(waterLevel < 0) waterLevel = 0; 
+
+  Serial.print("Water Level (cm): ");
+  Serial.println(waterLevel);
+
+  // 3. Send data to the web cloud if connected
+  if(WiFi.status() == WL_CONNECTED){
+    HTTPClient http;
+    String url = String(serverName) + "?api_key=" + apiKey + "&field1=" + String(waterLevel);
+    http.begin(url);
+    int httpResponseCode = http.GET();
+    http.end();
+  }
+
+  delay(20000); // Send data every 20 seconds
+}

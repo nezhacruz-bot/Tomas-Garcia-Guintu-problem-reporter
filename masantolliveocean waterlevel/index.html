@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocean Water Level Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: #eef1f6; margin-top: 50px; }
+        .container { background: white; padding: 30px; border-radius: 15px; display: inline-block; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1 { color: #0275d8; }
+        .level-display { font-size: 3rem; font-weight: bold; color: #333; margin: 20px 0; }
+        .unit { font-size: 1.5rem; color: #777; }
+        .iframe-container { margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🌊  Masantol Live Ocean Water Level</h1>
+        <p>Real-time Ocean Water Level Monitoring</p>
+        
+        <div class="level-display">
+            <span id="water-value">--</span> <span class="unit">cm</span>
+        </div>
+
+        <div class="iframe-container">
+            <iframe width="450" height="260" style="border: 1px solid #cccccc;" src="https://thingspeak.com/channels/3417458/charts/1?dynamic=true"></iframe>
+        </div>
+    </div>
+
+   <script>
+    // 1. Make sure you change this to your actual ThingSpeak Channel ID number!
+    const channelID = "3417458"; 
+
+    async function fetchWaterLevel() {
+        try {
+            const response = await fetch(`https://api.thingspeak.com/channels/${3417458}/feeds/last.json`);
+            const data = await response.json();
+            
+            // Check if field1 actually has data
+            if (data && data.field1 !== null && data.field1 !== undefined) {
+                const level = parseFloat(data.field1).toFixed(1);
+                document.getElementById('water-value').innerText = level;
+            } else {
+                // If the channel is empty, show 0.0 instead of NaN
+                document.getElementById('water-value').innerText = "0.0";
+                console.log("Channel is active, but no data points found yet.");
+            }
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            document.getElementById('water-value').innerText = "Error";
+        }
+    }
+
+    // Fetch data right away, then update every 15 seconds
+    fetchWaterLevel();
+    setInterval(fetchWaterLevel, 15000);
+</script>
+</body>
+</html>
