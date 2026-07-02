@@ -1,0 +1,12 @@
+{
+  "name": "school-problem-reporter",
+  "version": "1.0.0",
+  "description": "Local testing version",
+  "main": "public/netlify/functions/report.js",
+  "scripts": {
+    "start": "node public/netlify/functions/report.js"
+  },
+  "dependencies": {
+    "couchbase": "^4.0.0"
+  }
+}
